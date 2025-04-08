@@ -4,7 +4,7 @@
 # https://aka.ms/yaml
 
 trigger:
-- main
+- main  #
 
 pool:
   vmImage: 'ubuntu-latest'
@@ -13,10 +13,10 @@ variables:
   solution: '**/*.sln'
   buildPlatform: 'Any CPU'
   buildConfiguration: 'Release'
-  dotnetVersion: '6.0.x'
+  dotnetVersion: '9.0.x'
 
 steps:
-
+#
 - task: UseDotNet@2
   inputs:
     version: '$(dotnetVersion)'
@@ -50,10 +50,11 @@ steps:
     pathtoPublish: '$(Build.ArtifactStagingDirectory)'
     artifactName: 'drop'
 
+#
 - script: echo Hello, world!
   displayName: 'Run a one-line script'
 
 - script: |
     echo Add other tasks to build, test, and deploy your project.
     echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+  displayName: 'Run a multi-line script' 
