@@ -6,54 +6,50 @@
 trigger:
 - main
 
-pool:
-  vmImage: 'ubuntu-latest'
-
-variables:
-  solution: '**/*.sln'
-  buildPlatform: 'Any CPU'
-  buildConfiguration: 'Release'
-  dotnetVersion: '6.0.x'
-
-steps:
-
-- task: UseDotNet@2
-  inputs:
-    version: '$(dotnetVersion)'
-
-- task: NuGetToolInstaller@1
-
-- task: NuGetCommand@2
-  inputs:
-    restoreSolution: '$(solution)'
-
-- task: VSBuild@1
-  inputs:
-    solution: '$(solution)'
-    platform: '$(buildPlatform)'
-    configuration: '$(buildConfiguration)'
-
-- task: VSTest@2
-  inputs:
-    platform: '$(buildPlatform)'
-    configuration: '$(buildConfiguration)'
-
-- task: DotNetCoreCLI@2
-  inputs:
-    command: 'publish'
-    publishWebProjects: true
-    arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)'
-    zipAfterPublish: true
-
-- task: PublishBuildArtifacts@1
-  inputs:
-    pathtoPublish: '$(Build.ArtifactStagingDirectory)'
-    artifactName: 'drop'
-
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
-
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+stages:
+- stage: BuildAndTest
+  displayName: Build and Test Stage
+  pool:
+    vmImage: 'windows-latest'
+  variables:
+    solution: '**/*.sln'
+    buildPlatform: 'Any CPU'
+    buildConfiguration: 'Release'
+    dotnetVersion: '6.0.x'
+  jobs:
+  - job: BuildJob
+    displayName: Build Job
+    steps:
+    - task: UseDotNet@2
+      displayName: Install .NET SDK
+      inputs:
+        version: '$(dotnetVersion)'
+    - task: NuGetCommand@2
+      displayName: Restore NuGet Packages
+      inputs:
+        restoreSolution: '$(solution)'
+    - task: VSBuild@1
+      displayName: Build Solution
+      inputs:
+        solution: '$(solution)'
+        platform: '$(buildPlatform)'
+        configuration: '$(buildConfiguration)'
+    - task: VSTest@2
+      displayName: Run Unit Tests
+      inputs:
+        platform: '$(buildPlatform)'
+        configuration: '$(buildConfiguration)'
+        testSelector: 'testAssemblies'
+        testAssembly: '**/*Test*.dll'
+    - task: DotNetCoreCLI@2
+      displayName: Publish Artifacts
+      inputs:
+        command: 'publish'
+        publishWebProjects: true
+        arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)'
+        zipAfterPublish: true
+    - task: PublishBuildArtifacts@1
+      displayName: Upload Artifacts
+      inputs:
+        pathtoPublish: '$(Build.ArtifactStagingDirectory)'
+        artifactName: 'drop' 
